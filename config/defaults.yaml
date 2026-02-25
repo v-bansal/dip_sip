@@ -1,0 +1,17 @@
+strategy_defaults:
+  strategy_id: dip_sip_band_entry
+  lookback_days: 252
+  base_fraction: 0.25
+  thresholds_pct: [10, 15, 20, 30, 40, 50]
+  deploy_fractions: [0.10, 0.10, 0.15, 0.25, 0.35, 0.60]
+  allow_daily_dip_buys: true
+  transaction_cost_bps: 10
+  cash_rate_annual: 0.0
+plan_defaults:
+  plan_mode: monthly_amount
+  monthly_amount_inr: 10000
+  yearly_amount_inr: 120000
+  schedule: monthly
+storage:
+  cache_db_path: ./data/cache.sqlite
+  exports_dir: ./exports

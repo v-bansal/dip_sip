@@ -1,0 +1,13 @@
+indices:
+  - index_id: NIFTY50
+    label: "NIFTY 50"
+    preferred_series: TRI
+  - index_id: NIFTY_NEXT_50
+    label: "NIFTY Next 50"
+    preferred_series: TRI
+  - index_id: NIFTY_IT
+    label: "NIFTY IT"
+    preferred_series: TRI
+  - index_id: NIFTY_PHARMA
+    label: "NIFTY Pharma"
+    preferred_series: TRI
