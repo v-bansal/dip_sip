@@ -5,8 +5,9 @@ import json
 import yaml
 import streamlit as st
 import pandas as pd
+import streamlit_authenticator as stauth
 
-from storage.cache import LocalCache
+from storage.cache_factory import get_cache
 from core.engine import normalize_price_series, run_backtest
 from core.calendar import scale_amount_for_schedule
 
@@ -23,6 +24,7 @@ def ensure_dirs(p: str):
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CFG_DEFAULTS = os.path.join(BASE_DIR, 'config', 'defaults.yaml')
 CFG_REGISTRY = os.path.join(BASE_DIR, 'config', 'index_registry.yaml')
+CFG_CREDENTIALS = os.path.join(BASE_DIR, 'config', 'credentials.yaml')
 SCHEMA_SQL = os.path.join(BASE_DIR, 'storage', 'schema.sql')
 
 cfg = load_yaml(CFG_DEFAULTS)
@@ -34,11 +36,35 @@ EXPORTS_DIR = cfg['storage']['exports_dir']
 ensure_dirs(os.path.dirname(DB_PATH))
 ensure_dirs(EXPORTS_DIR)
 
-cache = LocalCache(DB_PATH)
+st.set_page_config(page_title='Dip-SIP Local', layout='wide')
+
+# ========== AUTHENTICATION ==========
+authenticator = stauth.Authenticate(
+    credentials=load_yaml(CFG_CREDENTIALS),
+    cookie_name=st.secrets.get('auth_cookie_name', 'dip_sip_auth'),
+    key=st.secrets.get('auth_cookie_key', 'default_key'),
+    cookie_expiry_days=int(st.secrets.get('auth_cookie_expiry_days', 30)),
+)
+
+name, authentication_status, username = authenticator.login('Login', 'main')
+
+if authentication_status == False:
+    st.error('Username/password is incorrect')
+    st.stop()
+
+if authentication_status == None:
+    st.warning('Please enter your username and password')
+    st.stop()
+
+# User is authenticated
+authenticator.logout('Logout', 'sidebar')
+st.sidebar.write(f'Welcome, **{name}**')
+
+# ========== INITIALIZE CACHE ==========
+cache = get_cache(DB_PATH)
 cache.init_db(SCHEMA_SQL)
 
-st.set_page_config(page_title='Dip-SIP Local', layout='wide')
-st.title('Dip-SIP Local — Triggers + Backtest')
+st.title('Dip-SIP — Triggers + Backtest')
 
 indices = registry['indices']
 index_label_to_id = {i['label']: i['index_id'] for i in indices}
@@ -210,6 +236,6 @@ if st.button('Save this run'):
     ledger.to_csv(ledger_path, index=False)
     with open(summary_path, 'w', encoding='utf-8') as f:
         json.dump(sum_dict, f, indent=2)
-    st.success(f'Saved. run_id: {run_id}')
+    st.success(f'✅ Saved. run_id: {run_id}')
     st.write(f'Ledger → {ledger_path}')
     st.write(f'Summary → {summary_path}')

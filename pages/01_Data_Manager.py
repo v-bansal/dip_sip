@@ -4,8 +4,9 @@ import os
 import yaml
 import streamlit as st
 import pandas as pd
+import streamlit_authenticator as stauth
 
-from storage.cache import LocalCache
+from storage.cache_factory import get_cache
 from providers.upload_csv import UploadCSVProvider
 
 
@@ -17,6 +18,7 @@ def load_yaml(path: str) -> dict:
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CFG_DEFAULTS = os.path.join(BASE_DIR, 'config', 'defaults.yaml')
 CFG_REGISTRY = os.path.join(BASE_DIR, 'config', 'index_registry.yaml')
+CFG_CREDENTIALS = os.path.join(BASE_DIR, 'config', 'credentials.yaml')
 SCHEMA_SQL = os.path.join(BASE_DIR, 'storage', 'schema.sql')
 
 cfg = load_yaml(CFG_DEFAULTS)
@@ -25,12 +27,35 @@ registry = load_yaml(CFG_REGISTRY)
 DB_PATH = cfg['storage']['cache_db_path']
 os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 
-cache = LocalCache(DB_PATH)
+st.set_page_config(page_title='Data Manager — Dip-SIP', layout='wide')
+
+# ========== AUTHENTICATION ==========
+authenticator = stauth.Authenticate(
+    credentials=load_yaml(CFG_CREDENTIALS),
+    cookie_name=st.secrets.get('auth_cookie_name', 'dip_sip_auth'),
+    key=st.secrets.get('auth_cookie_key', 'default_key'),
+    cookie_expiry_days=int(st.secrets.get('auth_cookie_expiry_days', 30)),
+)
+
+name, authentication_status, username = authenticator.login('Login', 'sidebar')
+
+if authentication_status == False:
+    st.error('Username/password is incorrect')
+    st.stop()
+
+if authentication_status == None:
+    st.warning('Please enter your username and password')
+    st.stop()
+
+authenticator.logout('Logout', 'sidebar')
+st.sidebar.write(f'Welcome, **{name}**')
+
+# ========== INITIALIZE CACHE ==========
+cache = get_cache(DB_PATH)
 cache.init_db(SCHEMA_SQL)
 
-st.set_page_config(page_title='Data Manager — Dip-SIP', layout='wide')
 st.title('Data Manager')
-st.caption('Upload your daily index CSV here to save it into the local cache. Then use the main Dashboard.')
+st.caption('Upload your daily index CSV here to save it into the cache. Then use the main Dashboard.')
 
 indices = registry['indices']
 index_label_to_id = {i['label']: i['index_id'] for i in indices}
@@ -72,7 +97,7 @@ if uploaded is not None:
             'unique_dates': int(dfv['date'].nunique()),
         })
 
-        if st.button('Save to local cache'):
+        if st.button('Save to cache'):
             cache.upsert_prices(index_id=index_id, series_type=series_type, source_id=res.source_id, df=df)
             st.success(f'✅ Saved {len(df)} rows for {index_id} / {series_type} / {res.source_id}.')
             st.info('Return to the main Dashboard and select this cached source from the sidebar.')
