@@ -82,6 +82,19 @@ if st.sidebar.button("🗑️ Clear All Cache"):
 cache = get_cache(DB_PATH)
 cache.init_db(SCHEMA_SQL)
 
+# ========== CACHE BUSTER ==========
+if st.sidebar.checkbox("🔧 Debug & Clear Cache"):
+    st.sidebar.write(f"**Cache type:** {type(cache).__name__}")
+    if st.sidebar.button("🗑️ Clear ALL Cache"):
+        st.cache_data.clear()
+        st.session_state.clear()
+        st.rerun()
+    
+    # Show raw sources
+    raw_sources = cache.list_sources_for_index(index_id, series_type)
+    st.sidebar.write("**Raw sources from DB:**", raw_sources)
+
+
 st.title('Dip-SIP — Triggers + Backtest')
 
 indices = registry['indices']
