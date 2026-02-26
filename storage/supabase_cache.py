@@ -58,15 +58,19 @@ class SupabaseCache:
         return pd.DataFrame(response.data)
 
     def list_sources_for_index(self, index_id: str, series_type: str) -> list[str]:
+        # Case-insensitive query with ILIKE
         response = (
             self.client.table('prices')
             .select('source_id')
-            .eq('index_id', index_id)
-            .eq('series_type', series_type)
+            .ilike('index_id', f'%{index_id}%')  # Case-insensitive
+            .ilike('series_type', f'%{series_type}%')
             .execute()
         )
-        sources = list(set(r['source_id'] for r in response.data))
+        
+        sources = list(set(r['source_id'] for r in response.data if r['source_id']))
         return sorted(sources)
+
+
 
     def save_run(
         self,
