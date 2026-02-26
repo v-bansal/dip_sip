@@ -68,6 +68,14 @@ name = st.session_state['name']
 st.sidebar.success(f'👋 Logged in as **{name}**')
 authenticator.logout('Logout', 'sidebar')
 
+st.sidebar.markdown("### 🔄 Cache Controls")
+if st.sidebar.button("🔄 Refresh Data Sources"):
+    st.cache_data.clear()
+    st.rerun()
+if st.sidebar.button("🗑️ Clear All Cache"):
+    st.cache_data.clear()
+    st.session_state.clear()
+    st.rerun()
 
 
 # ========== INITIALIZE CACHE ==========
