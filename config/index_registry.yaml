@@ -1,0 +1,31 @@
+indices:
+  - index_id: NIFTY50
+    label: "NIFTY 50"
+    preferred_series: TRI
+  - index_id: NIFTY_NEXT_50
+    label: "NIFTY Next 50"
+    preferred_series: TRI
+  - index_id: NIFTY_IT
+    label: "NIFTY IT"
+    preferred_series: TRI
+  - index_id: NIFTY_PHARMA
+    label: "NIFTY Pharma"
+    preferred_series: TRI
+  - index_id: NIFTY_BANK
+    label: "NIFTY Bank"
+    preferred_series: TRI
+  - index_id: NIFTY_AUTO
+    label: "NIFTY Auto"
+    preferred_series: TRI
+  - index_id: NIFTY_FMCG
+    label: "NIFTY FMCG"
+    preferred_series: TRI
+  - index_id: NIFTY_METAL
+    label: "NIFTY Metal"
+    preferred_series: TRI
+  - index_id: NIFTY_REALTY
+    label: "NIFTY Realty"
+    preferred_series: TRI
+  - index_id: NIFTY_ENERGY
+    label: "NIFTY Energy"
+    preferred_series: TRI
