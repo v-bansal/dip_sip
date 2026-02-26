@@ -39,26 +39,36 @@ ensure_dirs(EXPORTS_DIR)
 st.set_page_config(page_title='Dip-SIP Local', layout='wide')
 
 # ========== AUTHENTICATION ==========
+cfg_credentials = yaml.safe_load(open(CFG_CREDENTIALS, 'r', encoding='utf-8'))
+
 authenticator = stauth.Authenticate(
-    credentials=load_yaml(CFG_CREDENTIALS),
-    cookie_name=st.secrets.get('auth_cookie_name', 'dip_sip_auth'),
-    key=st.secrets.get('auth_cookie_key', 'default_key'),
-    cookie_expiry_days=int(st.secrets.get('auth_cookie_expiry_days', 30)),
+    cfg_credentials['credentials'],
+    cfg_credentials['cookie']['name'],
+    cfg_credentials['cookie']['key'],
+    cfg_credentials['cookie']['expiry_days']
 )
 
-name, authentication_status, username = authenticator.login('Login', 'main')
+# Render login form
+authenticator.login(location='main')
 
-if authentication_status == False:
-    st.error('Username/password is incorrect')
+# Check session state (set by login widget)
+if 'authentication_status' not in st.session_state:
+    st.session_state.authentication_status = None
+
+if st.session_state.authentication_status == False:
+    st.error('❌ Username/password is incorrect')
     st.stop()
 
-if authentication_status == None:
-    st.warning('Please enter your username and password')
+elif st.session_state.authentication_status == None:
+    st.title('🔐 Dip-SIP Login')
     st.stop()
 
-# User is authenticated
+# User authenticated ✅
+name = st.session_state['name']
+st.sidebar.success(f'👋 Logged in as **{name}**')
 authenticator.logout('Logout', 'sidebar')
-st.sidebar.write(f'Welcome, **{name}**')
+
+
 
 # ========== INITIALIZE CACHE ==========
 cache = get_cache(DB_PATH)
