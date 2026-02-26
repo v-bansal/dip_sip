@@ -58,22 +58,18 @@ class SupabaseCache:
         return pd.DataFrame(response.data)
 
     def list_sources_for_index(self, index_id: str, series_type: str) -> list[str]:
-    print(f"DEBUG: Querying index_id='{index_id}', series_type='{series_type}'")  # ADD THIS
-    
-    response = (
-        self.client.table('prices')
-        .select('source_id, index_id, series_type')  # ADD index_id, series_type
-        .eq('index_id', index_id)
-        .eq('series_type', series_type)
-        .limit(5)  # Limit for debug
-        .execute()
-    )
-    
-    print(f"DEBUG: Raw Supabase response: {response.data}")  # ADD THIS
-    
-    sources = list(set(r['source_id'] for r in response.data))
-    print(f"DEBUG: Extracted sources: {sources}")  # ADD THIS
-    return sorted(sources)
+        # Case-insensitive query with ILIKE
+        response = (
+            self.client.table('prices')
+            .select('source_id')
+            .ilike('index_id', f'%{index_id}%')  # Case-insensitive
+            .ilike('series_type', f'%{series_type}%')
+            .execute()
+        )
+        
+        sources = list(set(r['source_id'] for r in response.data if r['source_id']))
+        return sorted(sources)
+
 
 
     def save_run(
